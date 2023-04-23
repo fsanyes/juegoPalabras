@@ -1,13 +1,22 @@
-import {diccionario} from "https://cdn.jsdelivr.net/gh/fran-dawbaza/spanish-dictionary/diccionario.js";
+import { diccionario } from "https://cdn.jsdelivr.net/gh/fran-dawbaza/spanish-dictionary/diccionario.js";
 
 let contador = makeCounter(1);// Controla el tiempo
 const limite = 60;// Maximo tiempo de partida 60 => 1min
 let puntos = 0;// Puntos conseguidos durante la partida
+let nombreJugador = "";
 let timer;
 let partida;
 let letra; // Primera letra de la palabra
 let listaPalabras = new Array();// Lista de palabras correctas
 
+const inputPalabras = document.getElementById("palabra");
+inputPalabras.dataset.jugador = "nuevo";
+
+const datosRanking = localStorage.getItem('Jugador');   
+let jugadores = [];
+    if (datosRanking) {
+        jugadores = JSON.parse(datosRanking);
+    }
 // Inicia el juego
 // document.getElementById("iniciar").addEventListener('click', (e) => {
 //     e.preventDefault();
@@ -27,41 +36,77 @@ let listaPalabras = new Array();// Lista de palabras correctas
 // let timer = setInterval(() => {
 //     document.getElementById('contador').innerHTML = contador();
 // }, 1000);
+const botonRanking = document.getElementById('botonRanking');
+
+botonRanking.addEventListener('click',() => {
+    muestraRanking();
+});
+// TODO: Mostrar la tabla de rankings
+
+const tablaRanking = document.getElementById('tablaRanking');
+// tablaRanking.hidden = true;
+function muestraRanking() {
+
+
+    jugadores.forEach(jugador => {
+        console.log(`Jugador: ${jugador.nombreJugador}, Puntos: ${jugador.puntos}`);
+    });
+    // tablaRanking.hidden = false;
+}
+
+function guardaRanking(nombreJugador, puntos) {
+    const nuevoJugador = { nombreJugador, puntos };
+    jugadores.push(nuevoJugador);
+
+    jugadores.sort((a, b) => b.puntos - a.puntos);
+
+    localStorage.setItem('Jugador', JSON.stringify(jugadores));
+}
+
+
 
 // Controla la entrada de palabras
-document.getElementById('formulario').addEventListener('submit',(e)=> {
+document.getElementById('formulario').addEventListener('submit', (e) => {
     e.preventDefault();
+    // const palabra = inputPalabras.value;
     console.log(palabra.value);
     // Control de datos de entrada (Palabra)
-    // TODO: Cambiar la estructura para que sea mas facil | 1 caracteres > 2 letra inicial > 3 busca diccionario > 4 repetida
- 
-    if (compruebaChars(palabra,letra)) {
-
-        if (diccionario.includes(palabra.value.toLowerCase())) {// Si la palabra esta repetida
-            if (listaPalabras.includes(palabra.value.toLowerCase())) {
-                // alert("Palabra repetida");
-                muestraPista("Palabra repetida");
-            }
-            else {
-                // Introduce la palabra en la lista de palabras y suma puntos
-                listaPalabras.push(palabra.value.toLowerCase());
-                puntos += (puntosLetra(palabra) + puntosLongitud(palabra) + puntosExtra(palabra));
-                clearInput();
-            }
-        }
-        else {// La palabra no se encuentra en la lista de palabras
-            muestraPista("Palabra no encontrada");
-        }
+    if (inputPalabras.dataset.jugador === "nuevo") {
+        nombreJugador = inputPalabras.value;
+        console.log("intro");
+        inputPalabras.dataset.jugador = "partida";
+        clearInput();
+        reset();
     }
-    
-    document.getElementById('puntos').innerHTML = puntos;
-    
+    else {
+        if (compruebaChars(palabra, letra)) {
+
+            if (diccionario.includes(palabra.value.toLowerCase())) {// Si la palabra esta repetida
+                if (listaPalabras.includes(palabra.value.toLowerCase())) {
+                    // alert("Palabra repetida");
+                    muestraPista("Palabra repetida");
+                }
+                else {
+                    // Introduce la palabra en la lista de palabras y suma puntos
+                    listaPalabras.push(palabra.value.toLowerCase());
+                    puntos += (puntosLetra(palabra) + puntosLongitud(palabra) + puntosExtra(palabra));
+                    clearInput();
+                }
+            }
+            else {// La palabra no se encuentra en la lista de palabras
+                muestraPista("Palabra no encontrada");
+            }
+        }
+
+        document.getElementById('puntos').innerHTML = puntos;
+
+    }
+
 });
 
 // Boton de reinicio
-document.getElementById("restart").addEventListener("click",(e) => {
+document.getElementById("restart").addEventListener("click", (e) => {
     reset();
-    //Reinicia las pistas
 });
 
 // Resetea el juego
@@ -81,25 +126,26 @@ function reset() {
     }, 1000);
     // Para el juego cuando llega al limite de tiempo
     clearInterval(partida);
-    partida = setTimeout(() =>{
+    partida = setTimeout(() => {
         clearInterval(timer),
-        muestraLista(),// Muestra la lista de palabras introducidas
-        document.getElementById("palabra").disabled = true,// Deshabilita el input de texto
-        alert("Se termino el juego: " + puntos + " puntos")
-    }, (limite*1000)+100);
-    
-    
+            muestraLista(),// Muestra la lista de palabras introducidas
+            inputPalabras.disabled = true,// Deshabilita el input de texto
+            alert("Se termino el juego: " + puntos + " puntos")
+            guardaRanking(nombreJugador, puntos);
+    }, (limite * 1000) + 100);
+
+
     // Limpia la lista de palabras mostrada
     document.getElementById("lista").innerHTML = " ";
     // Limpia el array donde se guardan las palabras introducidas
     listaPalabras = [];
     // Habilita el input de texto
-    document.getElementById("palabra").disabled = false;
+    inputPalabras.disabled = false;
 }
 // Muestra la lista de palabras usadas
 function muestraLista() {
-    for (let i = 0; i< listaPalabras.length; i++) { 
-        document.getElementById("lista").innerHTML += listaPalabras[i]+"\n";
+    for (let i = 0; i < listaPalabras.length; i++) {
+        document.getElementById("lista").innerHTML += listaPalabras[i] + "\n";
     }
 }
 //Muestra una pista por pantalla
@@ -109,17 +155,17 @@ function muestraPista(pista) {
 
 function compruebaChars(palabra, letra) {
     let centinela = true;
-    const especiales = ["Á","É","Í","Ó","Ú","á","é","í","ó","ú","Ñ","ñ"];
-    
-    for (let i = 0; i< palabra.value.length; i++) {
+    const especiales = ["Á", "É", "Í", "Ó", "Ú", "á", "é", "í", "ó", "ú", "Ñ", "ñ"];
+
+    for (let i = 0; i < palabra.value.length; i++) {
         if (palabra.value[i].toUpperCase() < "A" || palabra.value[i].toUpperCase() > "Z") {// Comprueba que los caracter sean letras
             centinela = false;
-            
+
         }
-        if(especiales.includes(palabra.value[i])){
+        if (especiales.includes(palabra.value[i])) {
             centinela = true;
-        } 
-        
+        }
+
     }
     if (centinela == false) {
         muestraPista("Caracteres incorrectos");
@@ -127,8 +173,8 @@ function compruebaChars(palabra, letra) {
     if (palabra.value[0].toUpperCase() !== letra.toUpperCase()) {// Primera letra de la palabra
         muestraPista("Letra inicial incorrecta");
         centinela = false;
-    } 
-        
+    }
+
     return centinela
 }
 
@@ -141,7 +187,7 @@ function puntosLetra(palabra) {
     // 3	    B, F, G, H, I y V
     // 4	    J, L, N, O y Z
     // 5	    K, Ñ, Q, U, W, X e Y
-    console.log ("Letra: " + palabra.value[0].toUpperCase())
+    console.log("Letra: " + palabra.value[0].toUpperCase())
 
     switch (palabra.value[0].toUpperCase()) {
 
@@ -192,7 +238,7 @@ function puntosLetra(palabra) {
 }
 
 function puntosLongitud(palabra) {
-    
+
     let puntos = 0;
     // Puntos	Longitud
     // 1	    8, 9, 10, 11 y 12
@@ -202,7 +248,7 @@ function puntosLongitud(palabra) {
     // 5	    1, 2, 3, 18 y mayores de 18
     console.log("Longitud: " + palabra.value.length)
 
-    switch(palabra.value.length) {
+    switch (palabra.value.length) {
 
         case 8:
         case 9:
@@ -218,7 +264,7 @@ function puntosLongitud(palabra) {
         case 14:
             puntos += 2;
             break;
-            
+
         case 5:
         case 15:
             puntos += 3;
@@ -238,7 +284,7 @@ function puntosLongitud(palabra) {
             break;
     }
     console.log("Puntos longitud: " + puntos)
-    
+
     return puntos;
 }
 
@@ -246,18 +292,19 @@ function puntosLongitud(palabra) {
 function puntosExtra(palabra) {
     let puntos = 0;
     // letra K, Ñ, Q, W, X e Y => +1 punto
-    const extra = ["K","Ñ","Q","W","X","Y"];
-    
-    for (let i = 0; i<palabra.value.length; i++) {
+    const extra = ["K", "Ñ", "Q", "W", "X", "Y"];
+
+    for (let i = 0; i < palabra.value.length; i++) {
         if (extra.includes(palabra.value[i].toUpperCase())) {
             puntos++;
         }
     }
-    console.log("Puntos Extra: "+ puntos);
+    console.log("Puntos Extra: " + puntos);
     return puntos;
 }
 //Limpia el input
-function clearInput() {;// ? usar .value
+function clearInput() {
+    ;// ? usar .value
     if (palabra.value != "") {
         palabra.value = "";
     }
@@ -266,15 +313,15 @@ function clearInput() {;// ? usar .value
 function letraAleatoria() {
     let letra = String.fromCharCode(Math.floor(Math.random() * (90 - 65) + 65));
     document.getElementById("letra").innerHTML = letra;
-    document.getElementById("palabra").placeholder = letra;
+    inputPalabras.placeholder = letra;
     return letra;
 }
 
 // Crea un contador con un valor dado y lo aumenta cada vez que es llamado
 function makeCounter(counter) {
-    return function (){
+    return function () {
         // document.getElementById("contador").innerHTML = counter;
-        return counter++;   
+        return counter++;
     }
 }
 

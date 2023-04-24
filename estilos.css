@@ -30,3 +30,9 @@ input {
     color: white;
     border-color: #040058;
 }
+#tablaRanking {
+    display:none;
+    position: absolute;
+    width: 40%;
+    left: 1%;
+}

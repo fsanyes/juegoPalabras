@@ -9,6 +9,8 @@ let partida;
 let letra; // Primera letra de la palabra
 let listaPalabras = new Array();// Lista de palabras correctas
 
+const tablaRanking = document.getElementById('tablaRanking');
+
 const inputPalabras = document.getElementById("palabra");
 inputPalabras.dataset.jugador = "nuevo";
 
@@ -17,43 +19,62 @@ let jugadores = [];
     if (datosRanking) {
         jugadores = JSON.parse(datosRanking);
     }
-// Inicia el juego
-// document.getElementById("iniciar").addEventListener('click', (e) => {
-//     e.preventDefault();
-//     // Inicia el contador
-//     contador = makeCounter(0);
-//     timer = setInterval(() => {
-//         document.getElementById('contador').innerHTML = contador();
-//     }, 1000);
-//     //Inicia la letra aleatoria
-//     letra = String.fromCharCode(Math.floor(Math.random() * (90 - 65) + 65));
-//     document.getElementById("letra").innerHTML = letra;
-//     // Para el contador
-//     setTimeout(() =>{clearInterval(timer), alert("Se termino el juego: " + puntos + " puntos")}, (limite*1000)+100);
 
-// })
-
-// let timer = setInterval(() => {
-//     document.getElementById('contador').innerHTML = contador();
-// }, 1000);
 const botonRanking = document.getElementById('botonRanking');
-
+botonRanking.dataset.activo = "";
+//Boton que controla la visibilidad de la tabla
 botonRanking.addEventListener('click',() => {
-    muestraRanking();
-});
-// TODO: Mostrar la tabla de rankings
+    if (botonRanking.dataset.activo) {
+        botonRanking.dataset.activo = "";
+        tablaRanking.style.display = "none";
+        // tablaRanking.hidden = true;
+        botonRanking.classList.remove("btn-outline-success");
+        botonRanking.classList.add("btn-success");
+    }
+    else {
+        muestraRanking();
+        botonRanking.dataset.activo = "true";
+        tablaRanking.style.display = "table";
+        // tablaRanking.hidden = false;
+        botonRanking.classList.remove("btn-success");
+        botonRanking.classList.add("btn-outline-success");
+        
+    }
+}); 
 
-const tablaRanking = document.getElementById('tablaRanking');
-// tablaRanking.hidden = true;
+//Muestra una tabla con los datos de los jugadores
 function muestraRanking() {
+    
+    const tbody = tablaRanking.getElementsByTagName('tbody')[0];
+    let qualy = ["🥇","🥈","🥉"];
+    let i = 0;
 
+    tbody.innerHTML = "";
 
     jugadores.forEach(jugador => {
-        console.log(`Jugador: ${jugador.nombreJugador}, Puntos: ${jugador.puntos}`);
+        let fila = document.createElement('tr');
+        let posicion = document.createElement('th');
+        let nombre = document.createElement('td');
+        let puntosRanking = document.createElement('td');
+        i++;
+        if (i<4) {
+            posicion.textContent = qualy[i-1];
+        }
+        else posicion.textContent = i;
+        posicion.scope = "row";
+        fila.appendChild(posicion)
+
+        nombre.textContent = jugador.nombreJugador;
+        fila.appendChild(nombre)
+
+        puntosRanking.textContent = jugador.puntos;
+        fila.appendChild(puntosRanking)
+        tbody.appendChild(fila);
     });
     // tablaRanking.hidden = false;
 }
 
+//Guarda los datos ordenados de los jugadores en localstorage
 function guardaRanking(nombreJugador, puntos) {
     const nuevoJugador = { nombreJugador, puntos };
     jugadores.push(nuevoJugador);
@@ -63,8 +84,6 @@ function guardaRanking(nombreJugador, puntos) {
     localStorage.setItem('Jugador', JSON.stringify(jugadores));
 }
 
-
-
 // Controla la entrada de palabras
 document.getElementById('formulario').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -73,7 +92,7 @@ document.getElementById('formulario').addEventListener('submit', (e) => {
     // Control de datos de entrada (Palabra)
     if (inputPalabras.dataset.jugador === "nuevo") {
         nombreJugador = inputPalabras.value;
-        console.log("intro");
+
         inputPalabras.dataset.jugador = "partida";
         clearInput();
         reset();
@@ -108,6 +127,26 @@ document.getElementById('formulario').addEventListener('submit', (e) => {
 document.getElementById("restart").addEventListener("click", (e) => {
     reset();
 });
+
+// Inicia el juego
+// document.getElementById("iniciar").addEventListener('click', (e) => {
+//     e.preventDefault();
+//     // Inicia el contador
+//     contador = makeCounter(0);
+//     timer = setInterval(() => {
+//         document.getElementById('contador').innerHTML = contador();
+//     }, 1000);
+//     //Inicia la letra aleatoria
+//     letra = String.fromCharCode(Math.floor(Math.random() * (90 - 65) + 65));
+//     document.getElementById("letra").innerHTML = letra;
+//     // Para el contador
+//     setTimeout(() =>{clearInterval(timer), alert("Se termino el juego: " + puntos + " puntos")}, (limite*1000)+100);
+
+// })
+
+// let timer = setInterval(() => {
+//     document.getElementById('contador').innerHTML = contador();
+// }, 1000);
 
 // Resetea el juego
 function reset() {
